@@ -104,6 +104,22 @@ database	1       	Tue Apr 24 01:28:21 2018	DEPLOYED	mongodb-0.4.27 	test
 frontend	1       	Tue Apr 24 01:28:22 2018	DEPLOYED	podinfo-0.1.0  	test     
 ```
 
+View the frontend with the following:
+
+```bash
+http://<PUBLIC_IP>:<NODE_PORT>
+```
+
+Where PUBLIC_IP is the public ip of the cluster and
+NODE_PORT is the port for the node  frontend, defaults to 31198 but
+also can be aquired through code:
+
+```bash
+export NODE_PORT=$(kubectl get --namespace test -o jsonpath="{.spec.ports[0].nodePort}" services frontend-podinfo)
+
+http://<PUBLIC_IP>:${NODE_PORT}
+```
+
 ## <a name="help"></a>Getting Help
 
 If you have any questions about this Weave Flux Helm Demo:

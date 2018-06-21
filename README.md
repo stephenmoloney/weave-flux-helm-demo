@@ -24,6 +24,14 @@ On Linux:
 - Download the [latest release](https://github.com/kubernetes/helm/releases/latest)
 - unpack the tarball and put the binary in your `$PATH`
 
+or use a script (not on production) 
+
+```bash
+curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh && \
+chmod 700 get_helm.sh && \
+./get_helm.sh
+```
+
 Create a service account and a cluster role binding for Tiller:
 
 ```bash
@@ -48,25 +56,13 @@ Add the Weave Flux chart repo:
 helm repo add weaveworks https://weaveworks.github.io/flux
 ```
 
-Install Weave Flux and its Helm Operator by specifying your fork URL 
-(replace `stefanprodan` with your GitHub username): 
+Install Weave Flux and its Helm Operator by running `helm install ...`
+in the kubernetes cluster. 
 
 ```bash
 helm install --name flux \
 --set helmOperator.create=true \
---set git.url=git@github.com:stefanprodan/openfaas-flux \
---set git.chartsPath=charts \
---namespace flux \
-weaveworks/flux
-```
-
-You can connect Weave Flux to Weave Cloud using a service token:
-
-```bash
-helm install --name flux \
---set token=YOUR_WEAVE_CLOUD_SERVICE_TOKEN \
---set helmOperator.create=true \
---set git.url=git@github.com:stefanprodan/weave-flux-helm-demo \
+--set git.url=git@github.com:stephenmoloney/weave-flux-helm-demo \
 --set git.chartsPath=charts \
 --namespace flux \
 weaveworks/flux
@@ -83,6 +79,13 @@ Find the SSH public key with:
 kubectl -n flux logs deployment/flux | grep identity.pub | cut -d '"' -f2 | sed 's/.\{2\}$//'
 ```
 
+or alternatively with:
+
+```bash
+export FLUX_POD=$(kubectl get pods --namespace flux -l "app=flux,release=flux" -o jsonpath="{.items[0].metadata.name}")
+kubectl -n flux logs $FLUX_POD | grep identity.pub
+```
+
 In order to sync your cluster state with git you need to copy the public key and 
 create a **deploy key** with **write access** on your GitHub repository.
 
@@ -93,7 +96,7 @@ After a couple of seconds Flux will create the `test` namespace and will install
 for each resource inside the `releases` dir.
 
 ```bash
-helm list --namespace test
+watch -n 5 helm list --namespace test
 NAME    	REVISION	UPDATED                 	STATUS  	CHART          	NAMESPACE
 backend 	1       	Tue Apr 24 01:28:22 2018	DEPLOYED	podinfo-0.1.0  	test     
 cache   	1       	Tue Apr 24 01:28:23 2018	DEPLOYED	memcached-2.0.1	test     
